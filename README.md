@@ -17,9 +17,8 @@ Finally, it's always quite tempting to put Eq into companion object:
 ```scala
 case class IdCard(firstName: String, secondName: String)
 
-object IdCard {
+object IdCard
   given Eq[IdCard] = Eq.fromUniversalEquals
-}
 ```
 [Eq spreadsheet](src/main/scala/io/github/antonkw/1_eq.sc)
 
