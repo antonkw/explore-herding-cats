@@ -11,14 +11,17 @@ given Eq[IdCard] with {
   def eqv(a: IdCard, b: IdCard): Boolean = ???
 }
 ```
+No need to write `given idCardEq: Eq[IdCard]` with clear understanding that idCardEq won't be used.
+
 Finally, it's always quite tempting to put Eq into companion object:
 ```scala
 case class IdCard(firstName: String, secondName: String)
+
 object IdCard {
   given Eq[IdCard] = Eq.fromUniversalEquals
 }
-[Eq spreadsheet](src/main/scala/io/github/antonkw/1_eq.sc)
 ```
+[Eq spreadsheet](src/main/scala/io/github/antonkw/1_eq.sc)
 
 ### PartialOrder
 ```scala
