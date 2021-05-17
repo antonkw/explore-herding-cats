@@ -20,7 +20,7 @@ case class IdCard(firstName: String, secondName: String)
 object IdCard:
   given Eq[IdCard] = Eq.fromUniversalEquals
 ```
-[Eq spreadsheet](src/main/scala/io/github/antonkw/1_eq.sc)
+[Eq example](src/main/scala/io/github/antonkw/1_eq.sc)
 
 ### PartialOrder
 ```scala
@@ -52,13 +52,15 @@ def least[A](set: Set[A])(using partialOrdering: PartialOrder[A]): Option[A] =
   set.find(elem => set.forall(partialOrdering.tryCompare(_, elem).exists(_ >= 0)))
 
 def minimals[A](set: Set[A])(using partialOrdering: PartialOrder[A]): Set[A] =
-  set.filter(elem => set.forall(partialOrdering.tryCompare(_, elem).map(_ >= 0).getOrElse(true)))
+  set.filter(elem => set.forall(partialOrdering.tryCompare(_, elem).map(_ <= 0).getOrElse(true)))
 ```
 
 I also combined values to case class.
 ```scala
 case class PosetDescription[A](greatest: Option[A], least: Option[A], minimals: Set[A], maximals: Set[A])
 ```
+
+[PartialOrder example](src/main/scala/io/github/antonkw/2_partial.sc)
 
 It seemed that it is easy to abstract out sets itself to write something like:
 ```scala
@@ -98,3 +100,5 @@ given Order[IdCard] = Order.from((id1, id2) => {
   else initial
 })
 ```
+
+[Order example](src/main/scala/io/github/antonkw/3_order.sc)
