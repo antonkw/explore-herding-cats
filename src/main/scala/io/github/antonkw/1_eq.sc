@@ -5,7 +5,7 @@ println(s"1.0 max 2.0 is [${1.0 max 2.0}]")
 
 case class IdCard(firstName: String, secondName: String)
 
-object IdCard
+object IdCard:
   given Eq[IdCard] = Eq.fromUniversalEquals
 
 //  manual implementation of Eq be like:

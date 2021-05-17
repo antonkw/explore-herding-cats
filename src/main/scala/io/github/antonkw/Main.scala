@@ -11,16 +11,10 @@ object Main extends App {
 
   println(s"1.some =!= 2.some is [${1.some =!= 2.some}]")
   println(s"1.0 max 2.0 is [${1.0 max 2.0}]")
-
-  case class IdCard(firstName: String, secondName: String)
-
+  
   val anton = IdCard(firstName = "Anton", secondName = "Kovalevsky")
   val john = IdCard(firstName = "John", secondName = "Doe")
 
-//  given Eq[IdCard] with {
-//    def eqv(a: IdCard, b: IdCard): Boolean = true
-//  }
-  given Eq[IdCard] = Eq.fromUniversalEquals
 
   anton === john
   println(s"anton === john is [${anton === john}]")
@@ -52,7 +46,11 @@ object Main extends App {
 
 
   val gr = greatest(Set(3, 2, 1))
+  import cats.data._
 
-  println(PosetDescription.make(Set(3, 2, 1)))
+
+  val persons = NonEmptySet.of(john, anton)
+  println(persons)
+//  println(PosetDescription.make(Set(3, 2, 1)))
 
 }
