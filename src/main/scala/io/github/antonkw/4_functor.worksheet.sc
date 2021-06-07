@@ -42,6 +42,7 @@ val intEqWrapper: EqWrapper[Int] = stringEqWrapper.imap(_.toInt, _.toString)
 println(s"intEqWrapper eqv 42: ${intEqWrapper eqv 42}")
 
 import cats.Functor
+import io.github.antonkw.Macro
 val listFuntor: Functor[List] = Functor[List]
 listFuntor.as(List(1, 2, 3), "a") //List(a, a, a)
 
@@ -49,3 +50,9 @@ val listOfOptionFunctor: Functor[[α] =>> List[Option[α]]] = listFuntor.compose
 listOfOptionFunctor.map(List(Some(1), None))("N" + _) //val res0: List[Option[String]] = List(Some(N1), None)
 
 listFuntor.fproduct(List('a', 'b', 'c'))(_.toInt) //val res2: List[(Char, Int)] = List((a,97), (b,98), (c,99))
+
+type listType = [X] =>> List[X]
+
+val l: listType[Int]  = List(1)
+
+Macro.debugSingle(true || false)

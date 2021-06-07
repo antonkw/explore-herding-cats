@@ -17,3 +17,8 @@ val anton = IdCard(firstName = "Anton", secondName = "Kovalevsky")
 val john = IdCard(firstName = "John", secondName = "Doe")
 
 println(s"anton === john is [${anton === john}]")
+
+"hi"
+val a = 2 + 2
+a
+

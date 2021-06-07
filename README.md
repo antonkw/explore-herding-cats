@@ -20,7 +20,7 @@ case class IdCard(firstName: String, secondName: String)
 object IdCard:
   given Eq[IdCard] = Eq.fromUniversalEquals
 ```
-[Eq example](src/main/scala/io/github/antonkw/1_eq.sc)
+[Eq example](src/main/scala/io/github/antonkw/1_eq.worksheet.sc)
 
 ### PartialOrder
 ```scala
@@ -60,7 +60,7 @@ I also combined values to case class.
 case class PosetDescription[A](greatest: Option[A], least: Option[A], minimals: Set[A], maximals: Set[A])
 ```
 
-[PartialOrder example](src/main/scala/io/github/antonkw/2_partial.sc)
+[PartialOrder example](src/main/scala/io/github/antonkw/2_partial.worksheet.sc)
 
 It seemed that it is easy to abstract out sets itself to write something like:
 ```scala
@@ -101,7 +101,7 @@ given Order[IdCard] = Order.from((id1, id2) => {
 })
 ```
 
-[Order example](src/main/scala/io/github/antonkw/3_order.sc)
+[Order example](src/main/scala/io/github/antonkw/3_order.worksheet.sc)
 
 ## day 2 - Functor
 
@@ -211,4 +211,87 @@ listFuntor.as(List(1, 2, 3), "a") //List(a, a, a)
 val listOfOptionFunctor: Functor[[α] =>> List[Option[α]]] = listFuntor.compose[Option] //Functor[λ[α => F[G[α]]]] in Scala2
 listOfOptionFunctor.map(List(Some(1), None))("N" + _) //val res0: List[Option[String]] = List(Some(N1), None)
 ```
-[Functor examples](src/main/scala/io/github/antonkw/4_functor.sc)
+[Functor examples](src/main/scala/io/github/antonkw/4_functor.worksheet.sc)
+
+## day 3 - Semigroupal, Apply, Applicative
+
+### Semigroupal
+
+```scala
+trait Semigroupal[F[_]] extends Serializable {
+  def product[A, B](fa: F[A], fb: F[B]): F[(A, B)]
+}
+```
+Here we're dealing with cartesian product.
+
+```scala
+Semigroupal[Option].product(1.some, 2.some) === (1,2).some
+Semigroupal[Option].product(1.some, none[Int]) === none[(Int, Int)]
+Semigroupal[List].product(List(1, 2, 3), List("foo", "bar")) === List((1, "foo"), (1, "bar"), (2, "foo"), (2, "bar"), (3, "foo"), (3, "bar"))
+```
+
+### Apply
+
+Apply is quite tricky.
+
+There are plenty of explanations that aren't bringing much sense to me.
+
+Docs describe main function `def ap[A, B](ff: F[A => B])(fa: F[A]): F[B]` as "Given a value and a function in the Apply context, applies the function to the value."
+
+That still far away from motivation since our usual friends like `List` or `Option` typically shouldn't handle function inside.
+
+More or less good wording sounds like "apply lifts function `A => B` to container F[_]".
+
+It's easy to construct such kind of composition where we build `Option[A => B]` and pass values there but that's not a tooling for everyday anyway.
+
+[What is ap](https://typelevel.org/cats/typeclasses/applicative.html#what-is-ap) provides another one example.
+
+```scala
+val applyOption: Apply[Option] = Apply[Option]
+val optionOfStringToUpperCase: Option[String] => Option[String] = applyOption.ap[String, String](((s: String) => s.toUpperCase).some)
+val upper1 = optionOfStringToUpperCase("string".some)
+upper1 === "STRING".some
+optionOfStringToUpperCase(none[String]) === none
+
+val toUpper: String => String = _.toUpperCase
+val upper2 = toUpper.some <*> "string".some
+upper2 === "STRING".some
+```
+
+`ap2` and `map2` are introduced here too.
+
+```scala
+Apply[Option].map2("hello ".some, "world".some)(_ + _) === "hello world".some
+Apply[Option].map2(none[String], "world".some)(_ + _) === none[String]
+
+val composeTwoOptions: (Option[String], Option[Int]) => Option[String] = Apply[Option].ap2(((s: String, i: Int) => s + i).some)
+composeTwoOptions.apply("hi".some, 1.some) === "hi1".some
+composeTwoOptions.apply("hi".some, none[Int]) === none[String]
+```
+
+Product left/right are important tools, and they're declared at Apply.
+
+The allows to omit result of computations on the left/right side.
+```scala
+"hello".some *> "world".some === "world".some
+"hello".some <* "world".some === "hello".some
+none[String] *> "world".some === none[String]
+none[String] <* "world".some === none[String]
+```
+[Apply examples](src/main/scala/io/github/antonkw/5_apply.worksheet.sc)
+
+### Applicative
+
+Typically `Applicative` is described as applicative functor where `map`, `ap`, and `pure` are equally important.
+
+Now we're interested in `pure` method responsible for initialization of specified container: `def pure[A](a: A): F[A]`
+
+For Either it is going to be `Right(a)`, Option has `Some(a)`, and so on.
+
+Even while it seems extremely natural when we work with particular implementations it is vital to have abstraction to describe such a thing.
+
+There are good definitions for `pure` and `product`: (Applicative Typeclass)[https://typelevel.org/cats/typeclasses/applicative.html#applicative]
+```scala
+Applicative[Option].pure(1) === 1.some
+Applicative[Vector].pure(1) === Vector(1)
+```
