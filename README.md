@@ -278,20 +278,62 @@ The allows to omit result of computations on the left/right side.
 none[String] *> "world".some === none[String]
 none[String] <* "world".some === none[String]
 ```
+
+#### mapN magic
+
+`cats.ApplyArityFunctions` is responsible for bringing `map3`, `map4`, etc.
+
+```
+Apply[Option].map3(2.some, 2.some, 1.some)(_ + _ + _) === 5.some
+```
+
+`cats.syntax.TupleSemigroupalSyntax` brings some magic with `mapN`:
+```
+(1.some, 2.some).mapN { case (a, b) => a + b } === 3.some
+```
+
+Under magic is multiplied by zero under the hood:
+```
+private[syntax] final class Tuple3SemigroupalOps[F[_], A0, A1, A2](private val t3: Tuple3[F[A0], F[A1], F[A2]]) {
+  def mapN[Z](f: (A0, A1, A2) => Z)(implicit functor: Functor[F], semigroupal: Semigroupal[F]): F[Z] = Semigroupal.map3(t3._1, t3._2, t3._3)(f)
+```
+
 [Apply examples](src/main/scala/io/github/antonkw/5_apply.worksheet.sc)
+
+
 
 ### Applicative
 
 Typically `Applicative` is described as applicative functor where `map`, `ap`, and `pure` are equally important.
 
-Now we're interested in `pure` method responsible for initialization of specified container: `def pure[A](a: A): F[A]`
+We already considered `Apply` and `Functor`, hence we're interested in `pure` method responsible for initialization of specified container: `def pure[A](a: A): F[A]`
 
 For Either it is going to be `Right(a)`, Option has `Some(a)`, and so on.
 
 Even while it seems extremely natural when we work with particular implementations it is vital to have abstraction to describe such a thing.
 
 There are good definitions for `pure` and `product`: (Applicative Typeclass)[https://typelevel.org/cats/typeclasses/applicative.html#applicative]
+
 ```scala
 Applicative[Option].pure(1) === 1.some
 Applicative[Vector].pure(1) === Vector(1)
+```
+
+You can "replicate" values inside F:
+```
+Applicative[Option].replicateA(3, 1.some) === List(1, 1, 1).some
+```
+
+
+Applicative is composable:
+```
+Applicative[List].compose[Vector].compose[Option].pure(3) === List(Vector(3.some))
+```
+
+
+Some unit-functions that could be used when you need to preserve F-context but content doesn't matter or should be hidden:
+```
+Applicative[Option].unit === ().some
+
+Applicative[List].whenA(true)(List(1, 2, 3)) === List((), (), ())
 ```

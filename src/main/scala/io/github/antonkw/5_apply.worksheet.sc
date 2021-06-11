@@ -12,3 +12,7 @@ composeTwoOptions.apply("hi".some, none[Int]) === none[String]
 "hello".some <* "world".some === "hello".some
 none[String] *> "world".some === none[String]
 none[String] <* "world".some === none[String]
+
+Apply[Option].map3(2.some, 2.some, 1.some)(_ + _ + _) === 5.some
+
+(1.some, 2.some).mapN { case (a, b) => a + b } === 3.some
