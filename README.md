@@ -383,7 +383,7 @@ You simply define new refined type that ought to be positive. And you can combin
 
 ### Monoid
 
-(typeclasses/monoid.html)[https://typelevel.org/cats/typeclasses/monoid.html] and (herding-cats/Monoid.html)[https://eed3si9n.com/herding-cats/Monoid.html]/(herding-cats/using-monoids-to-fold.html)[https://eed3si9n.com/herding-cats/using-monoids-to-fold.html] provide all details.
+[typeclasses/monoid.html](https://typelevel.org/cats/typeclasses/monoid.html) and [herding-cats/Monoid.html](https://eed3si9n.com/herding-cats/Monoid.html)/[herding-cats/using-monoids-to-fold.html](https://eed3si9n.com/herding-cats/using-monoids-to-fold.html) provide all details.
 
 [Monoid examples](src/main/scala/io/github/antonkw/8_monoid.worksheet.sc)
 
