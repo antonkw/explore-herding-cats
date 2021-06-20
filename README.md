@@ -283,17 +283,17 @@ none[String] <* "world".some === none[String]
 
 `cats.ApplyArityFunctions` is responsible for bringing `map3`, `map4`, etc.
 
-```
+```scala
 Apply[Option].map3(2.some, 2.some, 1.some)(_ + _ + _) === 5.some
 ```
 
 `cats.syntax.TupleSemigroupalSyntax` brings some magic with `mapN`:
-```
+```scala
 (1.some, 2.some).mapN { case (a, b) => a + b } === 3.some
 ```
 
 Under magic is multiplied by zero under the hood:
-```
+```scala
 private[syntax] final class Tuple3SemigroupalOps[F[_], A0, A1, A2](private val t3: Tuple3[F[A0], F[A1], F[A2]]) {
   def mapN[Z](f: (A0, A1, A2) => Z)(implicit functor: Functor[F], semigroupal: Semigroupal[F]): F[Z] = Semigroupal.map3(t3._1, t3._2, t3._3)(f)
 ```
@@ -320,20 +320,76 @@ Applicative[Vector].pure(1) === Vector(1)
 ```
 
 You can "replicate" values inside F:
-```
+```scala
 Applicative[Option].replicateA(3, 1.some) === List(1, 1, 1).some
 ```
 
 
 Applicative is composable:
-```
+```scala
 Applicative[List].compose[Vector].compose[Option].pure(3) === List(Vector(3.some))
 ```
 
 
 Some unit-functions that could be used when you need to preserve F-context but content doesn't matter or should be hidden:
-```
+```scala
 Applicative[Option].unit === ().some
 
 Applicative[List].whenA(true)(List(1, 2, 3)) === List((), (), ())
 ```
+
+## day 4 – Semigroup and Monoid
+
+### Semigroup
+
+(herding-cats/Semigroup)[https://eed3si9n.com/herding-cats/Semigroup.html] with description (typeclasses/semigroup.html)[https://typelevel.org/cats/typeclasses/semigroup.html] are good sources to understand whole picture.
+
+(api/cats/kernel/Semigroup.html)[https://typelevel.org/cats/api/cats/kernel/Semigroup.html] docs also provide couple of more functions.
+
+```scala
+Semigroup[String].combineAllOption(List()) === none
+Semigroup[String].combineAllOption(List("hello", "world")) === "helloworld".some
+
+Semigroup[Int].combineN(2, 8) === 16
+
+Semigroup[String].intercalate("|").combine("hello", "world") == "hello|world"
+Semigroup[String].reverse.combine("hello", "world") === "worldhello"
+```
+
+Companion object also brings function to combine particular value and options.
+
+```scala
+Semigroup.maybeCombine("hello", none) === "hello"
+Semigroup.maybeCombine(none, "world") === "world"
+Semigroup.maybeCombine("hello".some, "world") === "helloworld"
+```
+
+[Semigroup examples](src/main/scala/io/github/antonkw/7_semigroup.worksheet.sc)
+
+Great example where you can use `combine` directly is (Refined)[https://github.com/fthomas/refined]
+
+```scala
+import eu.timepit.refined.cats._
+type PageNumberPredicate = Int Refined Positive
+@newtype case class PageNumber(value: PageNumberPredicate) {
+ private val One: PageNumberPredicate = 1
+ def increment: PageNumber = PageNumber(value |+| One)
+}
+```
+
+`|+|` is alias for `cats.kernel.Semigroup#combine` of instance derived by `eu.timepit.refined.cats.derivation`
+
+You simply define new refined type that ought to be positive. And you can combine instances once integration derives instance of `Semigroup[PageNumberPredicate]` for you.
+
+### Monoid
+
+(typeclasses/monoid.html)[https://typelevel.org/cats/typeclasses/monoid.html] and (herding-cats/Monoid.html)[https://eed3si9n.com/herding-cats/Monoid.html]/(herding-cats/using-monoids-to-fold.html)[https://eed3si9n.com/herding-cats/using-monoids-to-fold.html] provide all details.
+
+[Monoid examples](src/main/scala/io/github/antonkw/8_monoid.worksheet.sc)
+
+```scala
+Monoid.isEmpty(0) === true
+Monoid.combineAll(List[Int]()) === 0
+List(2, 10).foldLeft(Monoid[Int].empty)(Monoid[Int].combine) === 12
+```
+
